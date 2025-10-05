@@ -1,0 +1,60 @@
+---
+  hostname: leaf4
+
+  interfaces:
+    - name: Ethernet3
+      description: Uplink to Spine1
+      no_switchport: true
+      ip_address: 10.10.1.14/31
+    
+    - name: Ethernet4
+      description: Uplink to Spine2
+      no_switchport: true
+      ip_address: 10.10.2.14/31
+    
+    - name: Ethernet5
+      description: Uplink to Spine3
+      no_switchport: true
+      ip_address: 10.10.3.14/31
+    
+    - name: Ethernet6
+      description: Uplink to Spine4
+      no_switchport: true
+      ip_address: 10.10.4.14/31
+
+  virtual_mac: 001c.7300.0098
+   
+  loopbacks:
+    - name: Loopback0
+      ip_address: 172.16.0.74/32
+      
+  bgp:
+    asn: 65004
+    router_id: 172.16.0.74
+    underlay_neighbors:
+      - ip: 10.10.1.13
+        asn: 65000
+      - ip: 10.10.2.13
+        asn: 65000
+      - ip: 10.10.3.13
+        asn: 65000 
+      - ip: 10.10.4.13
+        asn: 65000
+
+  vlans:
+    - id: 30
+      name: Vlan30
+      svi: 172.16.30.1/24
+    - id: 40
+      name: Vlan40
+      svi: 172.16.40.1/24
+  
+  vnis:
+    - vni: 3030
+      vlan: 30
+      vrf: VRF-A
+    - vni: 4040
+      vlan: 40
+      vrf: VRF-A
+    - vni: 5050
+      vrf: VRF-A

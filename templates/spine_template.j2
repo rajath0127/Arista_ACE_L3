@@ -1,0 +1,35 @@
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ description {{ intf.description }}
+ {% if intf.no_switchport -%}
+ no switchport
+ {% endif -%}
+ ip address {{ intf.ip_address }}
+{% endfor %}
+
+{% for lb in loopbacks %}
+interface {{ lb.name }}
+ ip address {{ lb.ip_address }}
+{% endfor %}
+
+router bgp {{ bgp.asn }}
+ router-id {{ bgp.router_id }}
+ neighbor LeafUnderlay peer group
+ {% for leaf in leafs -%}
+ {% if hostname == "spine1" -%}
+  neighbor {{ leaf.interfaces[0].ip_address.split('/')[0] }} peer group LeafUnderlay
+  neighbor {{ leaf.interfaces[0].ip_address.split('/')[0] }} remote-as {{ leaf.bgp.asn }}
+ {% elif hostname == "spine2" -%}
+  neighbor {{ leaf.interfaces[1].ip_address.split('/')[0] }} peer group LeafUnderlay
+  neighbor {{ leaf.interfaces[1].ip_address.split('/')[0] }} remote-as {{ leaf.bgp.asn }}
+ {% elif hostname == "spine3" -%}
+  neighbor {{ leaf.interfaces[2].ip_address.split('/')[0] }} peer group LeafUnderlay
+  neighbor {{ leaf.interfaces[2].ip_address.split('/')[0] }} remote-as {{ leaf.bgp.asn }}
+ {% elif hostname == "spine4" -%}
+  neighbor {{ leaf.interfaces[3].ip_address.split('/')[0] }} peer group LeafUnderlay
+  neighbor {{ leaf.interfaces[3].ip_address.split('/')[0] }} remote-as {{ leaf.bgp.asn }}
+ {% endif -%}
+ {% endfor -%}
+ address-family ipv4
+  redistribute connected
+  neighbor LeafUnderlay activate

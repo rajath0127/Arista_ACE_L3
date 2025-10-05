@@ -1,0 +1,40 @@
+---
+  hostname: spine4
+
+  interfaces:
+    - name: Ethernet3
+      description: Uplink to Leaf1
+      no_switchport: true
+      ip_address: 10.10.4.1/31
+    
+    - name: Ethernet4
+      description: Uplink to Leaf2
+      no_switchport: true
+      ip_address: 10.10.4.5/31
+    
+    - name: Ethernet5
+      description: Uplink to Leaf3
+      no_switchport: true
+      ip_address: 10.10.4.9/31
+    
+    - name: Ethernet6
+      description: Uplink to Leaf4
+      no_switchport: true
+      ip_address: 10.10.4.13/31
+  
+  loopbacks:
+    - name: Loopback0
+      ip_address: 172.16.0.104/32
+        
+  bgp:
+    asn: 65000
+    router_id: 172.16.0.104
+    underlay_neighbors:
+      - ip: 10.10.4.2
+        asn: 65001
+      - ip: 10.10.4.6
+        asn: 65001
+      - ip: 10.10.4.10
+        asn: 65003 
+      - ip: 10.10.4.14
+        asn: 65004

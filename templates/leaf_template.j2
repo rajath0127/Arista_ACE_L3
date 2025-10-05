@@ -1,0 +1,126 @@
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ description {{ intf.description }}
+ {% if intf.no_switchport -%}
+ no switchport
+ ip address {{ intf.ip_address }}
+ {% else -%}
+ {% if intf.trunk -%}
+ switchport mode trunk
+ {% else -%}
+ switchport mode access
+ switchport access vlan {{ intf.access_vlan }}
+ {% endif -%}
+ {% endif -%}
+ {% if intf.channel_group is defined -%}
+ channel-group {{ intf.channel_group }} mode active
+ {% endif -%}
+{% endfor %}
+
+{% for lb in loopbacks %}
+interface {{ lb.name }}
+ ip address {{ lb.ip_address }}
+ no shutdown
+{% endfor %}
+
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+ name {{ vlan.name }}
+ {% if vlan.trunkgroup is defined -%}
+ trunk group {{ vlan.trunkgroup }}
+ {% endif -%}
+ {% if vlan.no_stp -%}
+ no spanning-tree vlan-id {{ vlan.id }}
+ {% endif -%}
+ 
+{% if vlan.svi is defined -%}
+interface {{ vlan.name }}
+ ip address {{ vlan.svi }}
+ no autostate
+ no shutdown
+{% endif -%}
+{% endfor %}
+
+{% if mlag is defined %}
+int {{ mlag.peer_link.interface }}
+ description Peer link {{ mlag.domain_id }}
+ switchport mode trunk
+ switchport trunk group {{ mlag.peer_link.trunkgroup }} 
+ no shutdown
+
+mlag configuration
+ domain-id {{ mlag.domain_id }}
+ local-interface {{ mlag.local_interface }}
+ peer-address {{ mlag.peer_address }}
+ peer-link {{ mlag.peer_link.interface }}
+{% endif %}
+
+ip virtual-router mac-address {{ virtual_mac }}
+
+router bgp {{ bgp.asn }}
+ router-id {{ bgp.router_id }}
+ neighbor SpineUnderlay peer group
+ {% for spine in spines -%}
+ {% if hostname == "leaf1" -%}
+  neighbor {{ spine.interfaces[0].ip_address.split('/')[0] }} peer group SpineUnderlay
+ {% elif hostname == "leaf2" -%}
+  neighbor {{ spine.interfaces[1].ip_address.split('/')[0] }} peer group SpineUnderlay
+ {% elif hostname == "leaf3" -%}
+  neighbor {{ spine.interfaces[2].ip_address.split('/')[0] }} peer group SpineUnderlay
+ {% elif hostname == "leaf4" -%}
+  neighbor {{ spine.interfaces[3].ip_address.split('/')[0] }} peer group SpineUnderlay
+ {% endif -%}
+ {% endfor -%}
+ neighbor SpineUnderlay remote-as {{ spines[0].bgp.asn }}
+ neighbor SpineUnderlay maximum-routes 12000
+ address-family ipv4
+  network {{ loopbacks[0].ip }}
+  redistribute connected
+  neighbor SpineUnderlay activate
+ 
+ neighbor SpineOverlay peer group
+ {%for spine in spines -%}
+ neighbor {{ spine.loopbacks[0].ip_address.split('/')[0] }} peer group SpineOverlay
+ {% endfor -%}
+ neighbor SpineOverlay remote-as {{ spines[0].bgp.asn }}
+ neighbor SpineOverlay update-source loopback0
+ neighbor SpineOverlay send-community extended
+ {% if bgp.asn != spines[0].bgp.asn -%}
+ neighbor SpineOverlay ebgp-multihop 3
+ {% endif -%}
+ neighbor SpineOverlay maximum-routes 12000
+ address-family evpn
+  neighbor SpineOverlay activate
+ {% for vn in vnis -%}
+ {% if vn.vlan is defined -%}
+ vlan {{ vn.vlan }}
+  rd {{ bgp.router_id }}:{{ vn.vni }}
+  route-target both {{ vn.vni }}:{{ vn.vni }}
+  redistribute learned
+ {% else -%}
+ vrf {{ vn.nvrf }}
+  rd {{ bgp.router_id }}:{{ vn.vni }}
+  route-target export evpn {{ vn.vni }}:{{ vn.vni }}
+  route-target import evpn {{ vn.vni }}:{{ vn.vni }}
+  redistribute connected
+ {% endif -%}
+ {% endfor -%}
+ int vxlan 1
+  no shutdown
+  {% if mlag is defined -%}
+  vxlan source-interface loopback1
+  {% else -%}
+  vxlan source-interface loopback0
+  {% endif -%}
+  {% for vn in vnis -%}
+  {% if vn.vlan is defined -%}
+  vxlan vlan {{ vn.vlan }} vni {{ vn.vni }}
+  {% else -%}
+  vxlan vrf {{ vn.nvrf }} vni {{ vn.vni }}
+  {% endif -%}
+  {% endfor -%}
+ 
+
+
+
+ 

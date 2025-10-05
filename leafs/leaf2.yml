@@ -1,0 +1,88 @@
+---
+  hostname: leaf2
+
+  interfaces:
+    - name: Ethernet3
+      description: Uplink to Spine1
+      no_switchport: true
+      ip_address: 10.10.1.6/31
+    
+    - name: Ethernet4
+      description: Uplink to Spine2
+      no_switchport: true
+      ip_address: 10.10.2.6/31
+    
+    - name: Ethernet5
+      description: Uplink to Spine3
+      no_switchport: true
+      ip_address: 10.10.3.6/31
+    
+    - name: Ethernet6
+      description: Uplink to Spine4
+      no_switchport: true
+      ip_address: 10.10.4.6/31
+
+    - name: Ethernet1
+      description: MLAG Peer Link to Leaf1 
+      channel_group: 100
+      no_switchport: false
+      trunk: true
+
+    - name: Ethernet2
+      description: MLAG Peer Link to Leaf1
+      channel_group: 100
+      no_switchport: false
+      trunk: true
+  
+  virtual_mac: 001c.7300.0099
+
+  loopbacks:
+    - name: Loopback0
+      ip_address: 172.16.0.72/32
+    - name: Loopback1
+      ip_address: 172.16.1.71/32
+
+  mlag:
+    domain_id: MLAGLeaf1Leaf2
+    peer_address: 172.16.255.1
+    local_interface: Vlan4094
+    peer_link:
+    peer_link: 
+      interface: Port-Channel100
+      trunkgroup: MLAGVLAN
+    
+  bgp:
+    asn: 65001
+    router_id: 172.16.0.72
+    underlay_neighbors:
+      - ip: 10.10.1.5
+        asn: 65000
+      - ip: 10.10.2.5
+        asn: 65000
+      - ip: 10.10.3.5
+        asn: 65000 
+      - ip: 10.10.4.5
+        asn: 65000
+
+  vlans:
+    - id: 10
+      name: Vlan10
+      svi: 172.16.10.1/24
+    - id: 20
+      name: Vlan20
+      svi: 172.16.20.1/24
+    - id: 4094
+      name: Vlan4094  
+      svi: 172.16.255.2/30
+      trunkgroup: MLAGVLAN
+      no_stp: true
+  
+  vnis:
+    - vni: 1010
+      vlan: 10
+      vrf: VRF-A
+    - vni: 1020
+      vlan: 20
+      vrf: VRF-A
+    - vni: 5050
+      vrf: VRF-A
