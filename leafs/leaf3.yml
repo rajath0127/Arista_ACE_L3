@@ -5,22 +5,22 @@
     - name: Ethernet3
       description: Uplink to Spine1
       no_switchport: true
-      ip_address: 10.10.1.10/31
+      ip_address: 10.10.1.10/30
     
     - name: Ethernet4
       description: Uplink to Spine2
       no_switchport: true
-      ip_address: 10.10.2.10/31
+      ip_address: 10.10.2.10/30
     
     - name: Ethernet5
       description: Uplink to Spine3
       no_switchport: true
-      ip_address: 10.10.3.10/31
+      ip_address: 10.10.3.10/30
     
     - name: Ethernet6
       description: Uplink to Spine4
       no_switchport: true
-      ip_address: 10.10.4.10/31
+      ip_address: 10.10.4.10/30
   
   virtual_mac: 001c.7300.0098
 
@@ -41,20 +41,25 @@
       - ip: 10.10.4.9
         asn: 65000
 
+  vrfs: 
+    - name: VRF-A
+  
   vlans:
     - id: 30
       name: Vlan30
-      svi: 172.16.30.1/24
+      svi:
+        vip: 172.16.30.254/24
+      vrf: VRF-A
     - id: 40
       name: Vlan40
-      svi: 172.16.40.1/24
+      svi:
+        vip: 172.16.40.254/24
+      vrf: VRF-A
   
   vnis:
     - vni: 3030
       vlan: 30
-      vrf: VRF-A
     - vni: 4040
       vlan: 40
-      vrf: VRF-A
     - vni: 5050
       vrf: VRF-A

@@ -5,22 +5,22 @@
     - name: Ethernet3
       description: Uplink to Leaf1
       no_switchport: true
-      ip_address: 10.10.2.1/31
+      ip_address: 10.10.2.1/30
     
     - name: Ethernet4
       description: Uplink to Leaf2
       no_switchport: true
-      ip_address: 10.10.2.5/31
+      ip_address: 10.10.2.5/30
     
     - name: Ethernet5
       description: Uplink to Leaf3
       no_switchport: true
-      ip_address: 10.10.2.9/31
+      ip_address: 10.10.2.9/30
     
     - name: Ethernet6
       description: Uplink to Leaf4
       no_switchport: true
-      ip_address: 10.10.2.13/31
+      ip_address: 10.10.2.13/30
   
   loopbacks:
     - name: Loopback0
