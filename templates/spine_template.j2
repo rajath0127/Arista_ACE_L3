@@ -12,8 +12,13 @@ interface {{ lb.name }}
  ip address {{ lb.ip_address }}
 {% endfor %}
 
+service routing protocols model multi-agent
+ip routing
+
 router bgp {{ bgp.asn }}
  router-id {{ bgp.router_id }}
+ no bgp default ipv4-unicast
+ maximum-paths 4 ecmp 4
  neighbor LeafUnderlay peer group
  {% for leaf in leafs -%}
  {% if hostname == "spine1" -%}
@@ -32,4 +37,28 @@ router bgp {{ bgp.asn }}
  {% endfor -%}
  address-family ipv4
   redistribute connected
+  network {{ loopbacks[0].ip_address }}
   neighbor LeafUnderlay activate
+ 
+ neighbor LeafOverlay peer group
+ {% for leaf in leafs -%}
+ neighbor {{ leaf.loopbacks[0].ip_address.split('/')[0] }} peer group LeafOverlay
+ {% endfor -%}
+ neighbor LeafOverlay update-source loopback0
+ neighbor LeafOverlay send-community extended
+ neighbor LeafOverlay maximum-routes 12000
+ {% if leafs[0].bgp.asn != bgp.asn -%}
+ neighbor LeafOverlay ebgp-multihop 3
+ neighbor LeafOverlay next-hop-unchanged
+ {% for leaf in leafs -%}
+ neighbor {{ leaf.loopbacks[0].ip_address.split('/')[0] }} remote-as {{ leaf.bgp.asn }}
+ {% endfor -%}
+ {% else -%}
+ neighbor LeafOverlay remote-as {{ leafs[0].bgp.asn }}
+ neighbor LeafOverlay route-reflector-client
+ {% endif -%}
+ 
+ address-family evpn
+  neighbor LeafOverlay activate
+
+ 

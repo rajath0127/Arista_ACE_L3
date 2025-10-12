@@ -23,6 +23,14 @@ interface {{ lb.name }}
  no shutdown
 {% endfor %}
 
+service routing protocols model multi-agent
+ip routing
+
+{% for vrf in vrfs %}
+ vrf instance {{ vrf.name }}
+ ip routing vrf {{ vrf.name }}
+{% endfor %}
+
 {% for vlan in vlans %}
 vlan {{ vlan.id }}
  name {{ vlan.name }}
@@ -35,7 +43,15 @@ vlan {{ vlan.id }}
  
 {% if vlan.svi is defined -%}
 interface {{ vlan.name }}
- ip address {{ vlan.svi }}
+ {% if vlan.vrf is defined -%}
+ vrf {{ vlan.vrf }}
+ {% endif -%}
+ {% if vlan.svi.ip is defined -%}
+ ip virtual-router address {{ vlan.svi.vip }}
+ ip address {{ vlan.svi.ip }}
+ {% else -%}
+ ip address virtual {{ vlan.svi.vip }}
+ {% endif -%}
  no autostate
  no shutdown
 {% endif -%}
@@ -55,10 +71,13 @@ mlag configuration
  peer-link {{ mlag.peer_link.interface }}
 {% endif %}
 
+
 ip virtual-router mac-address {{ virtual_mac }}
 
 router bgp {{ bgp.asn }}
  router-id {{ bgp.router_id }}
+ no bgp default ipv4-unicast
+ maximum-paths 4 ecmp 4
  neighbor SpineUnderlay peer group
  {% for spine in spines -%}
  {% if hostname == "leaf1" -%}
@@ -72,9 +91,10 @@ router bgp {{ bgp.asn }}
  {% endif -%}
  {% endfor -%}
  neighbor SpineUnderlay remote-as {{ spines[0].bgp.asn }}
+ neighbor SpineOverlay send-community extended
  neighbor SpineUnderlay maximum-routes 12000
  address-family ipv4
-  network {{ loopbacks[0].ip }}
+  network {{ loopbacks[0].ip_address }}
   redistribute connected
   neighbor SpineUnderlay activate
  
@@ -98,7 +118,7 @@ router bgp {{ bgp.asn }}
   route-target both {{ vn.vni }}:{{ vn.vni }}
   redistribute learned
  {% else -%}
- vrf {{ vn.nvrf }}
+ vrf {{ vn.vrf }}
   rd {{ bgp.router_id }}:{{ vn.vni }}
   route-target export evpn {{ vn.vni }}:{{ vn.vni }}
   route-target import evpn {{ vn.vni }}:{{ vn.vni }}
@@ -106,7 +126,6 @@ router bgp {{ bgp.asn }}
  {% endif -%}
  {% endfor -%}
  int vxlan 1
-  no shutdown
   {% if mlag is defined -%}
   vxlan source-interface loopback1
   {% else -%}
@@ -116,7 +135,7 @@ router bgp {{ bgp.asn }}
   {% if vn.vlan is defined -%}
   vxlan vlan {{ vn.vlan }} vni {{ vn.vni }}
   {% else -%}
-  vxlan vrf {{ vn.nvrf }} vni {{ vn.vni }}
+  vxlan vrf {{ vn.vrf }} vni {{ vn.vni }}
   {% endif -%}
   {% endfor -%}
  
