@@ -72,18 +72,19 @@
     - id: 10
       name: Vlan10
       svi: 
-        vip: 172.16.10.254/24
+        vrip: 172.16.10.254/24
         ip: 172.16.10.1/24
       vrf: VRF-A
     - id: 20
       name: Vlan20
       svi: 
-        vip: 172.16.20.254/24
+        vrip: 172.16.20.254/24
         ip: 172.16.20.1/24
       vrf: VRF-A
     - id: 4094
       name: Vlan4094
-      svi: 172.16.255.1/30
+      svi: 
+        ip: 172.16.255.1/30
       trunkgroup: MLAGVLAN
       no_stp: true
   

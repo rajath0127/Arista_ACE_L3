@@ -46,11 +46,12 @@ interface {{ vlan.name }}
  {% if vlan.vrf is defined -%}
  vrf {{ vlan.vrf }}
  {% endif -%}
- {% if vlan.svi.ip is defined -%}
- ip virtual-router address {{ vlan.svi.vip }}
- ip address {{ vlan.svi.ip }}
- {% else -%}
+ {% if vlan.svi.vrip is defined -%}
+ ip virtual-router address {{ vlan.svi.vrip }}
+ {% if vlan.svi.vip is defined -%}
  ip address virtual {{ vlan.svi.vip }}
+ {% if vlan.svi.ip is defined -%}
+ ip address {{ vlan.svi.ip }}
  {% endif -%}
  no autostate
  no shutdown
