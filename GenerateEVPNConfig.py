@@ -4,6 +4,8 @@ import yaml
 import glob
 import os
 
+path: "{{ lookup('env','PWD') }}"
+
 leafs = []
 spines = []
 
@@ -18,7 +20,7 @@ for file in glob.glob("spines/*.yml"):
         data = yaml.safe_load(f)
         spines.append(data)
 
-print(leafs[0])
+#print(leafs[0])
 
 env = Environment(loader=FileSystemLoader("templates"))
 leaf_template = env.get_template("leaf_template.j2")

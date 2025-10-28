@@ -48,8 +48,10 @@ interface {{ vlan.name }}
  {% endif -%}
  {% if vlan.svi.vrip is defined -%}
  ip virtual-router address {{ vlan.svi.vrip }}
+ {% endif -%}
  {% if vlan.svi.vip is defined -%}
  ip address virtual {{ vlan.svi.vip }}
+ {% endif -%}
  {% if vlan.svi.ip is defined -%}
  ip address {{ vlan.svi.ip }}
  {% endif -%}
